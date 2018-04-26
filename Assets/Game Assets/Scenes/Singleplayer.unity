@@ -463,6 +463,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   brush: {fileID: 113140, guid: a83983ea0f7ea18439f8f8530dc1c8cc, type: 2}
+  paint: {fileID: 0}
 --- !u!1 &796938436
 GameObject:
   m_ObjectHideFlags: 0
@@ -949,6 +950,6 @@ MonoBehaviour:
   noOfHallways: 50
   noOfRooms: 10
   floors: 1
-  enemies: 0
+  enemies: 1
   gameOver: 0
   gameWon: 0

@@ -6,6 +6,7 @@ using Random = UnityEngine.Random;
 using System.Xml.Linq;
 using UnityEngine.SceneManagement;
 using System.Collections;
+using UnityEditor;
 
 [RequireComponent (typeof(CharacterController))]
 [RequireComponent (typeof(AudioSource))]
@@ -48,7 +49,8 @@ public class FirstPersonController : MonoBehaviour
 	private AudioSource m_AudioSource;
 	private int door_mask;
 
-	private bool adjustedSpeed = false, moveInLocker = false, canContinue = false, interract = false, startInterraction = false, isCreative = false, hiding = false;
+	private int maxRun = 200, runMeter;
+	private bool adjustedSpeed = false, moveInLocker = false, canContinue = false, interract = false, startInterraction = false, isCreative = false, hiding = false, exhausted = false;
 	Transform targetLocker = null;
 
 	// Use this for initialization
@@ -65,6 +67,7 @@ public class FirstPersonController : MonoBehaviour
 		m_AudioSource = GetComponent<AudioSource> ();
 		m_MouseLook.Init (transform, m_Camera.transform);
 		door_mask = LayerMask.GetMask ("Door");
+		runMeter = maxRun;
 	}
 
 	// Update is called once per frame
@@ -188,6 +191,13 @@ public class FirstPersonController : MonoBehaviour
 		if (GetComponent<CharacterController> ().enabled) {
 			float speed;
 			GetInput (out speed);
+
+			if (speed >= m_RunSpeed && runMeter > 0) runMeter--;
+			else if (runMeter < maxRun) runMeter++;
+
+			if (runMeter <= 0) exhausted = true;
+			else if (runMeter >= maxRun) exhausted = false;
+
 			// always move along the camera forward as it is the direction that it being aimed at
 			Vector3 desiredMove = transform.forward * m_Input.y + transform.right * m_Input.x;
 
@@ -323,7 +333,7 @@ public class FirstPersonController : MonoBehaviour
 		m_IsWalking = !Input.GetKey (KeyCode.LeftShift);
 #endif
 		// set the desired speed to be walking or running
-		speed = m_IsWalking ? m_WalkSpeed : m_RunSpeed;
+		speed = m_IsWalking ? m_WalkSpeed : exhausted ? m_WalkSpeed : m_RunSpeed;
 		m_Input = new Vector2 (horizontal, vertical);
 
 		// normalize input if it exceeds 1 in combined length:
