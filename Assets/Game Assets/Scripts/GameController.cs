@@ -1,29 +1,42 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
+using System.IO;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.AI;
 using UnityEngine.UI;
-using System.Threading;
-using UnityStandardAssets.Characters.FirstPerson;
 using UnityEngine.Rendering;
+using UnityEditor;
+using UnityStandardAssets.Characters.FirstPerson;
 
 public class GameController : MonoBehaviour
 {
 	private List<GameObject> spawnedHallways = new List<GameObject> (), spawnedRooms = new List<GameObject> (), arrangedRooms = new List<GameObject> ();
 	private int maxInsTime = 200, inst = 0, insTimer = 0;
 
-	public List<GameObject> hallways = new List<GameObject> (), rooms = new List<GameObject> (), walls = new List<GameObject> (), generatedStructures = new List<GameObject> ();
-	public GameObject entrance, startRoom, enemy, end, locker, gameOverTxt, gameWonTxt, player, instructions, jumpCheckpoint, doorCheckpoint, building;
+	private List<GameObject> hallways = new List<GameObject> (), rooms = new List<GameObject> (), generatedStructures = new List<GameObject> ();
+	public GameObject entrance, startRoom, enemy, end, locker, gameOverTxt, gameWonTxt, player, instructions, jumpCheckpoint, doorCheckpoint, building, thumbnail;
 
-	public int noOfHallways, noOfRooms, floors = 2, enemies;
+	private int noOfHallways, noOfRooms, floors, enemies;
 	public bool gameOver = false, gameWon = false;
 
 	private bool finishedGeneration = false;
 
+    void Awake()
+    {
+        noOfHallways = LevelSettings.settings.noOfHallways;
+        noOfRooms = LevelSettings.settings.noOfRooms;
+        floors = LevelSettings.settings.floors;
+        enemies = LevelSettings.settings.enemies;
+        hallways = LevelSettings.settings.hallwaysLevel;
+        rooms = LevelSettings.settings.roomsLevel;
+    }
+
 	void Start ()
 	{
 		player = GameObject.FindGameObjectWithTag ("Player");
+                
 		if (floors > 0) {
 			building = new GameObject ("Building");
 
@@ -73,6 +86,7 @@ public class GameController : MonoBehaviour
 			SpawnEnemies ();
 		}
 		finishedGeneration = true;
+		thumbnail.GetComponent<Image> ().sprite = CreateSprite (rooms[0]);
 	}
 
 	void SpawnEnemies ()
@@ -229,7 +243,7 @@ public class GameController : MonoBehaviour
 
 	void Update ()
 	{
-		//if (Input.GetKey (KeyCode.Escape)) SceneManager.LoadScene (0);
+		if (Input.GetKey (KeyCode.Escape)) SceneManager.LoadScene (0);
 		if (player != null && player.transform.position.y < -5 && player.layer == 0) gameOver = true;
 		if (gameOver || gameWon) {
 			inst = -1;
@@ -237,6 +251,7 @@ public class GameController : MonoBehaviour
 			else gameWonTxt.SetActive (true);
 			if (Input.GetKeyDown (KeyCode.R)) SceneManager.LoadScene (SceneManager.GetActiveScene ().buildIndex);
 		}
+
 		if (instructions != null) {
 			switch (inst) {
 				case 0:
@@ -272,6 +287,22 @@ public class GameController : MonoBehaviour
 				insTimer = 0;
 			}
 		}
+	}
+
+	private Texture2D GetAssetThumbanil (GameObject obj)
+	{
+		return AssetPreview.GetAssetPreview (obj);
+	}
+
+	private Sprite CreateSprite (GameObject obj)
+	{
+		Texture2D asset = GetAssetThumbanil (obj);
+		byte[] bytes = asset.EncodeToPNG ();
+		Object.Destroy (asset);
+		//AssetDatabase.CreateAsset (bytes, "Assets/" + obj.name + ".png");
+		File.WriteAllBytes (AssetDatabase.GetAssetPath (0) + "/Ass.png", bytes);
+
+		return Sprite.Create (asset, new Rect (0, 0, asset.width, asset.height), Vector2.zero);
 	}
 
 	private void DestroyWalls (GameObject currentLink, GameObject connectingLink, int prevStrucType)
